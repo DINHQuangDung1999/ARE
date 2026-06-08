@@ -1,0 +1,13 @@
+suite: rewarped
+name: Rewarped
+
+env:
+  numEnvs: ${resolve_default:64,${...num_envs}}
+  env_suite: dflex
+  env_name: Ant
+
+  randomize: True
+  no_grad: False
+  render: False
+  no_env_offset: True
+env_autoresets: True

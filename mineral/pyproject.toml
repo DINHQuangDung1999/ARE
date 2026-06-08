@@ -1,0 +1,98 @@
+[build-system]
+requires = ["setuptools", "build", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mineral"
+authors = [{ name = "etaoxing", email = "etaoxing@users.noreply.github.com" }]
+requires-python = ">=3.8"
+description = "A minimal(ish) reinforcement learning library that aggregates reliable implementations"
+license = { text = "MIT License" }
+classifiers = [
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "torch",
+    "hydra-core",
+    "hydra_colorlog",
+    "wandb",
+    "termcolor",
+    "tensorboard",
+    "pandas",
+    "tabulate",
+    "scipy",
+]
+dynamic = ["version", "readme"]
+
+[project.optional-dependencies]
+dev = ["ruff"]
+
+[project.urls]
+GitHub = "https://github.com/etaoxing/mineral"
+
+[tool.setuptools.packages.find]
+include = ["mineral*"]
+
+[tool.setuptools.package-data]
+mineral = ["cfgs/**", "**/*.yml", "**/*.yaml"]
+
+[tool.setuptools.dynamic]
+version = { file = ["VERSION"] }
+readme = { file = ["README.md"], content-type = "text/markdown" }
+
+[tool.ruff]
+cache-dir = ".cache/ruff"
+line-length = 127
+indent-width = 4
+extend-exclude = [
+    ".git",
+    ".vscode",
+    "__pycache__",
+    "docs",
+    "build",
+    "third_party",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "I",  # isort
+    "F",  # pyflakes
+    "W",  # pycodestyle warnings
+    "B",  # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "D",  # pydocstyle
+]
+ignore = [
+    "B008",  # Do not perform calls in argument defaults.
+    "D10",   # Missing docstring
+    "E203",  # Whitespace before ':' (breaks black)
+    "E266",  # Too many leading '#' for block comment
+    "E302",  # Expected 2 blank lines, found 0
+    "E501",  # Line too long
+    "E722",  # do not use bare 'except'
+    "E731",  # Do not assign a lambda expression, use a def
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = [
+    "F401",  # Module imported but unused
+    "E402",  # Module level import not at top of file
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "preserve"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true

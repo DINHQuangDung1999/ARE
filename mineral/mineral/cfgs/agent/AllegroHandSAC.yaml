@@ -1,0 +1,74 @@
+seed: ${..seed}
+algo: SAC
+
+print_every: 1
+ckpt_every: 1000
+
+tracker_len: 100
+metrics_kwargs:
+  save_video_every: 0
+  save_video_consecutive: 0
+
+network:
+  normalize_input: True
+  encoder: null
+
+  actor: Actor
+  actor_kwargs:
+    mlp_kwargs:
+      units: [512, 256, 128]
+      norm_type: LayerNorm
+      act_type: SiLU
+    weight_init: orthogonal
+
+    tanh_policy: False
+    fixed_sigma: False
+    dist_kwargs: {dist_type: squashed_normal, minlogstd: -5.0, maxlogstd: 5.0}
+
+  critic: EnsembleQ
+  critic_kwargs:
+    n_critics: 2
+    mlp_kwargs:
+      units: [512, 256, 128]
+      norm_type: LayerNorm
+      act_type: SiLU
+    weight_init: orthogonal
+
+sac:
+  multi_gpu: ${...multi_gpu}
+  num_actors: ${...task.env.numEnvs}
+
+  reward_shaper:
+    fn: scale
+    scale: 0.01
+
+  max_agent_steps: 200e6
+  horizon_len: 1
+  memory_size: 5e6
+  batch_size: 8192
+  # nstep: 1
+  nstep: 3
+  tau: 0.05
+  gamma: 0.99
+  warm_up: 32
+  no_tgt_actor: True
+  handle_timeout: True
+
+  # for TD3: set update_actor_interval=2, update_targets_interval=2, mini_epochs=1
+  update_actor_interval: 1
+  update_targets_interval: 1
+  mini_epochs: 8  # pql.update_times
+
+  init_alpha: 1.0
+  # init_alpha: 0.01
+  alpha: null
+  alpha_optim_kwargs:
+    lr: 5e-3
+    # betas: [0.5, 0.999]
+    # eps: 1e-5
+  backup_entropy: True
+
+  optim_type: AdamW
+  actor_optim_kwargs: {lr: 5e-4}
+  critic_optim_kwargs: {lr: 5e-4}
+  max_grad_norm: 0.5

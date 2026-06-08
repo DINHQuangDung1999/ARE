@@ -1,0 +1,12 @@
+suite: dflex
+name: DFlex
+
+env:
+  numEnvs: ${resolve_default:64,${...num_envs}}
+  env_name: ant  # ant | cartpole | cheetah | hopper | humanoid | snu_humanoid
+
+  stochastic_init: True
+  no_grad: False
+  render: False
+  no_env_offset: True
+env_autoresets: True

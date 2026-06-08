@@ -1,0 +1,24 @@
+defaults:
+  - DFlexAntSHAC2
+  - _self_
+
+seed: ${..seed}
+algo: SHACGAE
+
+network:
+  actor_gaelambda: Critic
+  actor_gaelambda_kwargs:
+    weight_init: orthogonalg1
+    mlp_kwargs:
+      units: [64, 64]
+      norm_type: LayerNorm
+      act_type: SiLU
+
+shac:
+  name: SHACGAE
+  update_lambda_every: 1
+  lambda_iterations: 1
+  num_lambda_batches: 1
+  actor_loss_type: fixed-gae # fixed-gae | adpt-gae | time-adpt-gae
+  logit_actor_gaelambda: 3.0
+  actor_gaelambda_optim_kwargs: {lr: 5e-4, betas: [0.7, 0.95]}

@@ -1,0 +1,39 @@
+defaults:
+  - DFlexSHAC2
+  - _self_
+
+seed: ${..seed}
+algo: SHACGAE
+
+network:
+  actor_gaelambda: Critic
+  actor_gaelambda_kwargs:
+    weight_init: orthogonalg1
+    mlp_kwargs:
+      units: [64, 64]
+      norm_type: LayerNorm
+      act_type: SiLU
+
+shac:
+  name: SAPOGAE
+  with_autoent: True
+  with_logprobs: True
+  target_entropy_scalar: 0.5
+  use_distr_ent: True
+  init_alpha: 1.0
+  alpha_optim_kwargs: {lr: 5e-3, betas: [0.7, 0.95]}
+
+  scale_by_target_entropy: True
+  unscale_entropy_alpha: True
+  offset_by_target_entropy: True
+
+  entropy_in_return: True
+  entropy_in_targets: True
+
+  update_lambda_every: 1
+  lambda_iterations: 1
+  num_lambda_batches: 1
+  actor_loss_type: fixed-gae # fixed-gae | adpt-gae | time-adpt-gae
+  logit_actor_gaelambda: 3.0
+  decoupleTD: False
+  actor_gaelambda_optim_kwargs: {lr: 5e-4, betas: [0.7, 0.95]}

@@ -1,0 +1,11 @@
+<mujoco model="object">
+  <compiler angle="radian"/>
+
+  <worldbody>
+    <body name="cube_geom" pos="0 0 0">
+      <!-- <joint armature="0" damping="0" limited="false" margin="0.01" name="root" pos="0 0 0" type="free"/> -->
+      <freejoint name="root"/>
+      <geom size="0.0325 0.0325 0.0325" type="box"/>
+    </body>
+  </worldbody>
+</mujoco>

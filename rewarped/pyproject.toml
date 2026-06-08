@@ -1,0 +1,105 @@
+[build-system]
+requires = ["setuptools", "build", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rewarped"
+authors = [{ name = "rewarped contributors", email = "etaoxing@users.noreply.github.com" }]
+requires-python = ">=3.10"
+description = "A platform for reinforcement learning in differentiable multiphysics simulation"
+license = { text = "Apache License 2.0" }
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "warp-lang>=1.7.0",
+    "usd-core==24.5",
+    "trimesh",
+    "pycollada",
+]
+dynamic = ["version", "readme"]
+
+[project.optional-dependencies]
+dev = ["ruff"]
+
+[project.urls]
+GitHub = "https://github.com/rewarped/rewarped"
+
+[tool.setuptools.packages.find]
+include = ["rewarped*"]
+
+[tool.setuptools.package-data]
+rewarped = ["assets/**", "**/*.yml", "**/*.yaml"]
+
+[tool.setuptools.dynamic]
+version = { file = ["VERSION"] }
+readme = { file = ["README.md"], content-type = "text/markdown" }
+
+[tool.ruff]
+cache-dir = ".cache/ruff"
+line-length = 120
+indent-width = 4
+extend-exclude = [
+    ".git",
+    ".vscode",
+    "__pycache__",
+    "docs",
+    "build",
+    "third_party",
+    # Rewarped
+    "rewarped/assets",
+    "rewarped/data",
+    "rewarped/warp_mpm_sga",
+    "rewarped/envs/legged_gym/configs",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "I",  # isort
+    "F",  # pyflakes
+    "W",  # pycodestyle warnings
+    "B",  # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    # "NPY",  # NumPy-specific rules
+    # "PLC",  # pylint convention
+    # "PLE",  # pylint error
+    # "PLW",  # pylint warning
+]
+ignore = [
+    "E501",  # Many lines are over 120 characters already
+    "E741",  # Warp often uses l as a variable name
+    "F403",  # Allow wildcard imports
+    "F405",  # Related to use of wildcard imports
+    "F811",  # Warp often uses overloads
+    "E721", # Warp often uses == in float and int type comparisons
+    "PLW0603", # Allow assignments to global variables
+    #
+    "B007",  # Loop control variable not used within loop body
+    "C408",  # Unnecessary `dict` call (rewrite as a literal)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = [
+    "F401",  # Module imported but unused
+    "E402",  # Module level import not at top of file
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+
+[tool.ruff.lint.isort]
+known-first-party = ["warp"]
