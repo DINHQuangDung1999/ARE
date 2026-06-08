@@ -77,16 +77,17 @@ def Model_state(self: Model, requires_grad=None, copy="clone", integrator_type=N
             s.body_f_s = wp.zeros((B,), dtype=wp.spatial_vector, device=device, requires_grad=requires_grad)
             s.body_ft_s = wp.zeros((B,), dtype=wp.spatial_vector, device=device, requires_grad=requires_grad)
 
-        # allocate mass, Jacobian matrices, and other auxiliary variables pertaining to the model
-        if self.joint_count:
-            # system matrices
-            s.M = wp.zeros((self.fs_M_size,), dtype=wp.float32, device=device, requires_grad=requires_grad)
-            s.J = wp.zeros((self.fs_J_size,), dtype=wp.float32, device=device, requires_grad=requires_grad)
-            s.P = wp.empty_like(s.J, requires_grad=requires_grad)
-            s.H = wp.empty((self.fs_H_size,), dtype=wp.float32, device=device, requires_grad=requires_grad)
-
-            # zero since only upper triangle is set which can trigger NaN detection
-            s.L = wp.zeros_like(s.H)
+        # Warp 1.7.0 no longer stores fs_M_size/fs_J_size/fs_H_size on Model.
+        # Dense Featherstone solver buffers are managed by the integrator instead.
+        #
+        # Old code kept here for reference if you later pin an older Warp:
+        #
+        # if self.joint_count:
+        #     s.M = wp.zeros((self.fs_M_size,), dtype=wp.float32, device=device, requires_grad=requires_grad)
+        #     s.J = wp.zeros((self.fs_J_size,), dtype=wp.float32, device=device, requires_grad=requires_grad)
+        #     s.P = wp.empty_like(s.J, requires_grad=requires_grad)
+        #     s.H = wp.empty((self.fs_H_size,), dtype=wp.float32, device=device, requires_grad=requires_grad)
+        #     s.L = wp.zeros_like(s.H)
 
         s._featherstone_augmented = True
 

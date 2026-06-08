@@ -16,6 +16,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from opacus.grad_sample import GradSampleModule
 
 from ... import nets
 from ...common import normalizers
@@ -29,6 +30,12 @@ from .utils import CriticDataset, adaptive_scheduler, grad_norm, policy_kl, soft
 
 class SHACGAE(Agent):
     r"""Short-Horizon Actor-Critic."""
+
+    @staticmethod
+    def _disable_inplace_ops(module):
+        for child in module.modules():
+            if hasattr(child, "inplace"):
+                child.inplace = False
 
     def __init__(self, full_cfg, **kwargs):
         self.network_config = full_cfg.agent.network
@@ -129,8 +136,10 @@ class SHACGAE(Agent):
         CriticCls = getattr(models, self.network_config.critic)
         self.actor = ActorCls(obs_dim, self.action_dim, **self.network_config.get("actor_kwargs", {}))
         self.critic = CriticCls(obs_dim, self.action_dim, **self.network_config.get("critic_kwargs", {}))
+        self._disable_inplace_ops(self.actor)
         self.actor.to(self.device)
         self.critic.to(self.device)
+        self.actor = GradSampleModule(self.actor, strict=False)
 
         # --- Optim ---
         OptimCls = getattr(torch.optim, self.shac_config.optim_type)
@@ -514,15 +523,30 @@ class SHACGAE(Agent):
         self.timer.start("train/actor_closure/backward_sim")
         actor_loss.backward()
         self.timer.end("train/actor_closure/backward_sim")
-        g1 = []
+
+        grad_var = torch.zeros((), dtype=torch.float32, device=self.device)
         for name, params in self.actor.named_parameters():
-            if '_module' in name:
-                g1.append(params.grad_sample.flatten(1, -1))
-        g1 = torch.concat(g1, dim = 1)
-        grad_var = (g1.std(dim = 0)**2).sum()
+            grad_sample = getattr(params, "grad_sample", None)
+            if grad_sample is None:
+                continue
+            grad_sample = grad_sample.flatten(1, -1)
+            if grad_sample.shape[0] > 1:
+                grad_var = grad_var + grad_sample.var(dim=0, unbiased=True).sum()
+            else:
+                grad_var = grad_var + grad_sample.var(dim=0, unbiased=False).sum()
+
+        # Previous implementation kept for reference:
+        # g1 = []
+        # for name, params in self.actor.named_parameters():
+        #     if '_module' in name:
+        #         breakpoint()
+        #         g1.append(params.grad_sample.flatten(1, -1))
+        # g1 = torch.concat(g1, dim=1)
+        # grad_var = (g1.std(dim=0) ** 2).sum()
+
         results["grad_var/actor"].append(grad_var)
         for name, params in self.actor.named_parameters():
-            if '_module' in name or 'mu' in name:
+            if getattr(params, "grad_sample", None) is not None:
                 params.grad_sample = None
         # print(grad_var.item())
         # if torch.isnan(grad_var):

@@ -34,7 +34,7 @@ class MLP(nn.Module):
         norm_type=None,
         norm_kwargs={},
         act_type="ReLU",
-        act_kwargs=dict(inplace=True),
+        act_kwargs=dict(inplace=False),
         bias=True,
         plain_last=False,
     ):

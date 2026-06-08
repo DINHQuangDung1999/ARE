@@ -30,6 +30,7 @@ experiment: ''
 # logdir: 'debug'
 logdir: 'workdir/${task.name}'
 wandb:
+  name: null
   mode: offline  # online | offline | disabled
   project: null
   group: null

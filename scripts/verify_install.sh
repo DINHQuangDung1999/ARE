@@ -3,21 +3,19 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VENV_DIR="${ROOT_DIR}/.venv"
 
-if [ ! -d "${VENV_DIR}" ]; then
-    echo "error: virtual environment not found at ${VENV_DIR}"
-    echo "run ./scripts/setup_env.sh first"
+if ! command -v python >/dev/null 2>&1; then
+    echo "error: python not found in current environment"
+    echo "activate your Conda environment first, then rerun this script"
     exit 1
 fi
 
-# shellcheck disable=SC1091
-source "${VENV_DIR}/bin/activate"
+cd /tmp
 
 python - <<'PY'
-import mineral
-import rewarped
+from mineral.scripts import run as mineral_run
+from rewarped import environment as rewarped_environment
 
-print("mineral import OK:", getattr(mineral, "__file__", "unknown"))
-print("rewarped import OK:", getattr(rewarped, "__file__", "unknown"))
+print("mineral import OK:", getattr(mineral_run, "__file__", "unknown"))
+print("rewarped import OK:", getattr(rewarped_environment, "__file__", "unknown"))
 PY
