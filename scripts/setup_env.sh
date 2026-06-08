@@ -10,6 +10,8 @@ if ! command -v python >/dev/null 2>&1; then
 fi
 
 python -m pip install --upgrade pip setuptools wheel
+python -m pip install opacus
+python -m pip install warp-lang==1.7.0
 python -m pip install -e "${ROOT_DIR}/rewarped"
 python -m pip install -e "${ROOT_DIR}/mineral"
 
