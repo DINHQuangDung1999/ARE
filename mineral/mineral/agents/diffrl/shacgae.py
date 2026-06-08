@@ -139,7 +139,7 @@ class SHACGAE(Agent):
         self._disable_inplace_ops(self.actor)
         self.actor.to(self.device)
         self.critic.to(self.device)
-        self.actor = GradSampleModule(self.actor, strict=False)
+        # self.actor = GradSampleModule(self.actor, strict=False)
 
         # --- Optim ---
         OptimCls = getattr(torch.optim, self.shac_config.optim_type)
@@ -526,14 +526,15 @@ class SHACGAE(Agent):
 
         grad_var = torch.zeros((), dtype=torch.float32, device=self.device)
         for name, params in self.actor.named_parameters():
-            grad_sample = getattr(params, "grad_sample", None)
-            if grad_sample is None:
-                continue
-            grad_sample = grad_sample.flatten(1, -1)
-            if grad_sample.shape[0] > 1:
-                grad_var = grad_var + grad_sample.var(dim=0, unbiased=True).sum()
-            else:
-                grad_var = grad_var + grad_sample.var(dim=0, unbiased=False).sum()
+            if '_module' in name:
+                grad_sample = getattr(params, "grad_sample", None)
+                if grad_sample is None:
+                    continue
+                grad_sample = grad_sample.flatten(1, -1)
+                if grad_sample.shape[0] > 1:
+                    grad_var = grad_var + grad_sample.var(dim=0, unbiased=True).sum()
+                else:
+                    grad_var = grad_var + grad_sample.var(dim=0, unbiased=False).sum()
 
         # Previous implementation kept for reference:
         # g1 = []

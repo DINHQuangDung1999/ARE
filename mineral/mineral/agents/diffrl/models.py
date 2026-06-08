@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from ...nets import MLP, Dist
-
+from opacus import GradSampleModule
 
 def weight_init_orthogonal_(m, gain=1.4142135623730951):  # sqrt(2)
     if isinstance(m, nn.Linear):
@@ -100,12 +100,15 @@ class Actor(nn.Module):
         self.fixed_sigma = fixed_sigma
         self.init_sigma = init_sigma
 
-        self.actor_mlp = MLP(state_dim, **mlp_kwargs)
-        self.mu = nn.Linear(self.actor_mlp.out_dim, action_dim)
+        self.actor_mlp = GradSampleModule(MLP(state_dim, **mlp_kwargs))
+        self.mu = GradSampleModule(nn.Linear(self.actor_mlp._module.out_dim, action_dim))
+        # self.actor_mlp = MLP(state_dim, **mlp_kwargs)
+        # self.mu = nn.Linear(self.actor_mlp.out_dim, action_dim)
         if self.fixed_sigma:
             self.sigma = nn.Parameter(torch.ones(action_dim, dtype=torch.float32), requires_grad=True)
         else:
-            self.sigma = nn.Linear(self.actor_mlp.out_dim, action_dim)
+            self.sigma = GradSampleModule(nn.Linear(self.actor_mlp._module.out_dim, action_dim))
+            # self.sigma = nn.Linear(self.actor_mlp.out_dim, action_dim)
         self.dist = Dist(**dist_kwargs)
 
         self.weight_init = weight_init
@@ -174,6 +177,8 @@ class Critic(nn.Module):
             return [x]
         elif return_type == "min_and_avg":
             return x, x.clone()
+        elif return_type == "sigmoid":
+            return torch.nn.functional.sigmoid(x)
         else:
             return x
 
