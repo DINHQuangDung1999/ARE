@@ -17,7 +17,7 @@ from ...warp_env import WarpEnv
 from .utils.torch_utils import normalize, quat_conjugate, quat_from_angle_axis, quat_mul, quat_rotate
 
 
-class Go2(WarpEnv):
+class Go2Old(WarpEnv):
     sim_name = "Go2" + "DFlex"
     env_offset = (2.5, 0.0, 2.5)
 
@@ -219,4 +219,4 @@ class Go2(WarpEnv):
 
 
 if __name__ == "__main__":
-    run_env(Go2,  episode_length=500, early_termination=True, render=False, render_mode=None)
+    run_env(Go2Old,  episode_length=500, early_termination=True, render=False, render_mode=None)

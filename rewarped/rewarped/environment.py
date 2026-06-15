@@ -329,7 +329,8 @@ class Environment:
         elif "WARP_RENDER_DIR" in os.environ:
             self.render_dir = os.path.realpath(os.environ.get("WARP_RENDER_DIR"))
         else:
-            self.render_dir = os.path.join(wp.config.kernel_cache_dir, "../outputs")
+            # self.render_dir = os.path.join(wp.config.kernel_cache_dir, "../outputs")
+            self.render_dir = os.path.join(os.getcwd(), "/render_outputs")
 
         if self.render_mode == RenderMode.NONE:
             renderer = None

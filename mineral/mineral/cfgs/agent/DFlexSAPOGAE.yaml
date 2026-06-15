@@ -32,7 +32,7 @@ shac:
 
   update_lambda_every: 1
   lambda_iterations: 1
-  num_lambda_batches: 1
+  num_lambda_batches: 4
   actor_loss_type: fixed-gae # fixed-gae | adpt-gae | time-adpt-gae
   logit_actor_gaelambda: 3.0
   decoupleTD: False
