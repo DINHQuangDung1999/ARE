@@ -19,7 +19,7 @@ class RollingPin(MPMWarpEnvMixin, WarpEnv):
     sim_substeps_mpm = 40
 
     eval_fk = True
-    eval_kinematic_fk = True
+    kinematic_fk = True
     eval_ik = False
 
     up_axis = "Y"
@@ -193,7 +193,7 @@ class RollingPin(MPMWarpEnvMixin, WarpEnv):
         self.actions = actions
         acts = self.action_scale * actions
 
-        if self.eval_kinematic_fk:
+        if self.kinematic_fk:
             # ensure joint limit
             joint_q = self.state.joint_q.clone().view(self.num_envs, -1)
             joint_q = joint_q.detach()
@@ -258,8 +258,9 @@ class RollingPin(MPMWarpEnvMixin, WarpEnv):
             with wp.ScopedTimer("render", False):
                 self.render_time += self.frame_dt
                 self.renderer.begin_frame(self.render_time)
-                self.renderer.render(state or self.state_0)
-                self.render_mpm(state)
+                # render state 1 (swapped with state 0 just before)
+                self.renderer.render(state or self.state_1)
+                self.render_mpm(state=state)
                 self.renderer.end_frame()
 
     def run_cfg(self):

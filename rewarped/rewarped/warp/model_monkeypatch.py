@@ -1,3 +1,5 @@
+import types
+
 import warp as wp
 from warp.sim.model import Control, Model, State
 
@@ -13,11 +15,10 @@ def get_copy_fn(copy):
         raise ValueError(copy)
 
 
-def Model_state(self: Model, requires_grad=None, copy="clone", integrator_type=None, integrator_settings=None) -> State:
+def Model_state(self: Model, requires_grad=None, copy="clone", integrator_type=None) -> State:
     s = State()
     if requires_grad is None:
         requires_grad = self.requires_grad
-    device = self.device
 
     # s.requires_grad = requires_grad
     # s.particle_count = self.particle_count
@@ -64,30 +65,29 @@ def Model_state(self: Model, requires_grad=None, copy="clone", integrator_type=N
             s.joint_S_s = wp.empty(
                 (self.joint_dof_count,),
                 dtype=wp.spatial_vector,
-                device=device,
+                device=self.device,
                 requires_grad=requires_grad,
             )
 
             # derived rigid body data (maximal coordinates)
             B = self.body_count
-            s.body_q_com = wp.empty((B,), dtype=wp.transform, device=device, requires_grad=requires_grad)
-            s.body_I_s = wp.empty((B,), dtype=wp.spatial_matrix, device=device, requires_grad=requires_grad)
-            s.body_v_s = wp.empty((B,), dtype=wp.spatial_vector, device=device, requires_grad=requires_grad)
-            s.body_a_s = wp.empty((B,), dtype=wp.spatial_vector, device=device, requires_grad=requires_grad)
-            s.body_f_s = wp.zeros((B,), dtype=wp.spatial_vector, device=device, requires_grad=requires_grad)
-            s.body_ft_s = wp.zeros((B,), dtype=wp.spatial_vector, device=device, requires_grad=requires_grad)
+            s.body_q_com = wp.empty((B,), dtype=wp.transform, device=self.device, requires_grad=requires_grad)
+            s.body_I_s = wp.empty((B,), dtype=wp.spatial_matrix, device=self.device, requires_grad=requires_grad)
+            s.body_v_s = wp.empty((B,), dtype=wp.spatial_vector, device=self.device, requires_grad=requires_grad)
+            s.body_a_s = wp.empty((B,), dtype=wp.spatial_vector, device=self.device, requires_grad=requires_grad)
+            s.body_f_s = wp.zeros((B,), dtype=wp.spatial_vector, device=self.device, requires_grad=requires_grad)
+            s.body_ft_s = wp.zeros((B,), dtype=wp.spatial_vector, device=self.device, requires_grad=requires_grad)
 
-        # Warp 1.7.0 no longer stores fs_M_size/fs_J_size/fs_H_size on Model.
-        # Dense Featherstone solver buffers are managed by the integrator instead.
-        #
-        # Old code kept here for reference if you later pin an older Warp:
-        #
-        # if self.joint_count:
-        #     s.M = wp.zeros((self.fs_M_size,), dtype=wp.float32, device=device, requires_grad=requires_grad)
-        #     s.J = wp.zeros((self.fs_J_size,), dtype=wp.float32, device=device, requires_grad=requires_grad)
-        #     s.P = wp.empty_like(s.J, requires_grad=requires_grad)
-        #     s.H = wp.empty((self.fs_H_size,), dtype=wp.float32, device=device, requires_grad=requires_grad)
-        #     s.L = wp.zeros_like(s.H)
+        # allocate mass, Jacobian matrices, and other auxiliary variables pertaining to the model
+        if self.joint_count:
+            # system matrices
+            s.M = wp.zeros((self.fs_M_size,), dtype=wp.float32, device=self.device, requires_grad=requires_grad)
+            s.J = wp.zeros((self.fs_J_size,), dtype=wp.float32, device=self.device, requires_grad=requires_grad)
+            s.P = wp.empty_like(s.J, requires_grad=requires_grad)
+            s.H = wp.empty((self.fs_H_size,), dtype=wp.float32, device=self.device, requires_grad=requires_grad)
+
+            # zero since only upper triangle is set which can trigger NaN detection
+            s.L = wp.zeros_like(s.H)
 
         s._featherstone_augmented = True
 
@@ -119,11 +119,22 @@ def Model_state(self: Model, requires_grad=None, copy="clone", integrator_type=N
     return s
 
 
-def Model_control(self: Model, requires_grad=None, clone_variables=True, copy="clone") -> Control:
-    c = Control()
+def Control_clear_acts(self: Control):
+    if self.joint_act:
+        self.joint_act.zero_()
+    if self.tri_activations:
+        self.tri_activations.zero_()
+    if self.tet_activations:
+        self.tet_activations.zero_()
+    if self.muscle_activations:
+        self.muscle_activations.zero_()
+
+
+def Model_control(self: Model, requires_grad=None, copy="clone") -> Control:
+    c = Control(self)
     if requires_grad is None:
         requires_grad = self.requires_grad
-    if clone_variables and copy is not None:
+    if copy is not None:
         copy_fn = get_copy_fn(copy)
 
         if self.joint_count:
@@ -140,4 +151,6 @@ def Model_control(self: Model, requires_grad=None, clone_variables=True, copy="c
         c.tet_activations = self.tet_activations
         c.muscle_activations = self.muscle_activations
 
+    # monkeypatch add clear_acts() method
+    c.clear_acts = types.MethodType(Control_clear_acts, c)
     return c

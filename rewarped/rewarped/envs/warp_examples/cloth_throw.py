@@ -147,7 +147,8 @@ class ClothThrow(WarpEnv):
         if not self.render_traj:
             super().render(state)
         else:
-            state = state or self.state_0
+            # render state 1 (swapped with state 0 just before)
+            state = state or self.state_1
             traj_vert = self.state.particle_q.view(self.num_envs, -1, 3).mean(1).tolist()
             self.traj_verts.append(traj_vert)
 

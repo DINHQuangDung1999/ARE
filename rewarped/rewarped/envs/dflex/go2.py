@@ -28,7 +28,7 @@ class Go2(WarpEnv):
     eval_fk = True
     eval_ik = False if integrator_type == IntegratorType.FEATHERSTONE else True
 
-    frame_dt = 1.0 / 60.0
+    frame_dt = 1.0 / 50.0
     up_axis = "Y"
     ground_plane = True
 
@@ -42,13 +42,13 @@ class Go2(WarpEnv):
         
         # self.action_scale = 80.0
         
-        self.action_scale = 10.0 # This works with stiffness = 5.0 and mode target position
-        motor_strength = torch.tensor([0.2, 0.6, 0.4, 0.2, 0.6, 0.4, 0.2, 0.6, 0.4, 0.2, 0.6, 0.4], device=self.device, dtype=torch.float32)
-        self.action_scale = self.action_scale * motor_strength
+        self.action_scale = 0.25 # This works with stiffness = 5.0 and mode target position
+        # motor_strength = torch.tensor([0.2, 0.6, 0.4, 0.2, 0.6, 0.4, 0.2, 0.6, 0.4, 0.2, 0.6, 0.4], device=self.device, dtype=torch.float32)
+        # self.action_scale = self.action_scale * motor_strength
 
         self.termination_height = 0.18
         self.action_penalty = -5e-3
-        self.joint_vel_obs_scaling = 0.1
+        self.joint_vel_obs_scaling = 1.0
 
     def create_modelbuilder(self):
         builder = super().create_modelbuilder()
@@ -62,12 +62,12 @@ class Go2(WarpEnv):
             floating=True,
             density=1000.0,
             # stiffness=0.0,
-            stiffness=5.0, # This works with action_scale = 10.0 and and mode target position
-            damping=1.0,
-            contact_ke=4.0e3,
-            contact_kd=1.0e3,
-            contact_kf=3.0e2,
-            contact_mu=0.75,
+            stiffness=25.0, # This works with action_scale = 10.0 and and mode target position
+            damping=0.5,
+            contact_ke=5.0e2,
+            contact_kd=3.0e3,
+            contact_kf=1.0e2,
+            contact_mu=1.0,
             contact_restitution=0.0,
             limit_ke=1.0e3,
             limit_kd=1.0e1,
@@ -94,6 +94,7 @@ class Go2(WarpEnv):
 
             self.start_joint_q = self.state.joint_q.view(self.num_envs, -1).clone()
             self.start_joint_qd = self.state.joint_qd.view(self.num_envs, -1).clone()
+            self.default_dof_pos = self.start_joint_q[:, 7:].clone()
 
             self.start_pos = self.start_joint_q[:, :3]
             self.start_rot = list(wp.quat_from_axis_angle((1.0, 0.0, 0.0), -math.pi * 0.5))
@@ -142,18 +143,15 @@ class Go2(WarpEnv):
         joint_qd[env_ids, 3:6] = lin_vel + torch.cross(joint_q[env_ids, 0:3], ang_vel, dim=-1)
 
     def pre_physics_step(self, actions):
-        # return
         actions = actions.view(self.num_envs, -1)
         actions = torch.clip(actions, -1.0, 1.0)
         self.actions = actions
-        acts = self.action_scale * actions
-
-        # acts = -acts  # invert the action direction to match dflex
+        joint_targets = self.default_dof_pos + self.action_scale * actions
 
         if self.joint_act_indices is ...:
-            self.control.assign("joint_act", acts.flatten())
+            self.control.assign("joint_act", joint_targets.flatten())
         else:
-            joint_act = self.scatter_actions(self.joint_act, self.joint_act_indices, acts)
+            joint_act = self.scatter_actions(self.joint_act, self.joint_act_indices, joint_targets)
             self.control.assign("joint_act", joint_act.flatten())
 
     def compute_observations(self):
@@ -219,4 +217,8 @@ class Go2(WarpEnv):
 
 
 if __name__ == "__main__":
-    run_env(Go2,  episode_length=500, early_termination=True, render=False, render_mode=None)
+    run_env(Go2,  
+            episode_length=200, 
+            early_termination=True, 
+            render=False, 
+            render_mode=None)

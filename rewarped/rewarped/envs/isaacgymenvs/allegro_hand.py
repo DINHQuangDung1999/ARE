@@ -286,7 +286,7 @@ class AllegroHand(WarpEnv):
 
         # self.num_hand_bodies = builder.body_count
         # self.num_hand_shapes = builder.shape_count
-        self.num_hand_dofs = builder.joint_axis_count
+        self.num_hand_dofs = builder.joint_count
         # print("Num dofs: ", self.num_hand_dofs)
         # self.num_hand_actuators = self.num_hand_dofs
 
@@ -888,18 +888,19 @@ class AllegroHand(WarpEnv):
             with wp.ScopedTimer("render", False):
                 self.render_time += self.frame_dt
                 self.renderer.begin_frame(self.render_time)
-                self.renderer.render(state or self.state_0)
+                # render state 1 (swapped with state 0 just before)
+                self.renderer.render(state or self.state_1)
                 self.render_transforms(state=state)
                 self.render_goal(state=state)
                 self.renderer.end_frame()
 
     def render_transforms(self, state=None):
-        state = state or self.state_0
+        state = state or self.state_1
 
         # TODO: render arrows
 
     def render_goal(self, state=None):
-        state = state or self.state_0
+        state = state or self.state_1
 
         # TODO: render goal object
 

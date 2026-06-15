@@ -73,7 +73,7 @@ class MPMWarpEnvMixin:
         replace_torch_cbrt()
 
     def render_mpm(self, state=None):
-        state = state or self.state_0
+        state = state or self.state_1
 
         # render mpm particles
         particle_q = state.mpm_x
