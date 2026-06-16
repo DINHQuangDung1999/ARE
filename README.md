@@ -47,8 +47,9 @@ pip install -e ./mineral
 ### Train and play policy 
 
 ```bash
-bash train.sh
-bash eval.sh
+cd ARE
+bash scripts/train.sh
+bash scripts/eval.sh
 ```
 
 
