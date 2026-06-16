@@ -1,6 +1,12 @@
-# ARE
+# ARE: Adaptive TD-λ Return Estimation for Learning Control in Differentiable Simulation
 
-ARE is an outer-level monorepo for working on local copies of:
+This is the official repository for the implementation of the paper **ARE: Adaptive TD-λ Return Estimation for Learning Control in Differentiable Simulation**.
+
+In this paper, we propose to control the variance of pathwise gradient in first-order model-based RL algorithms via using the TD-λ return as the maximization objective for the actor network. In addition, we propose to adaptively adjust λ using a value-fitting objective to avoid expensive manual tuning and further enhance the learning stability. 
+
+Our algorithms demonstrate improvements over challenging locomotion tasks, with an average improvement of roughly 50% over the Ant environment and almost 100% with the simulated Unitree Go2 quadruped environment. Moreover, our design allows exploiting the gradient information over a much longer learning horizon, enabling more effective long-term credit assignment for first- order model-based reinforcement learning methods.
+
+![Description of figure](figures/graphical_abstract.png)
 
 - `mineral` from `etaoxing/mineral`
 - `rewarped` from `rewarped/rewarped`
