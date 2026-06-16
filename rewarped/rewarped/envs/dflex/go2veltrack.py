@@ -17,7 +17,7 @@ from ...warp_env import WarpEnv
 from .utils.torch_utils import quat_conjugate, quat_from_angle_axis, quat_mul, quat_rotate
 
 
-class Go2VelTrack(WarpEnv):
+class Go2veltrack(WarpEnv):
     sim_name = "Go2VelTrack" + "DFlex"
     env_offset = (2.5, 0.0, 2.5)
 
@@ -74,9 +74,9 @@ class Go2VelTrack(WarpEnv):
             os.path.join(self.asset_dir, "dflex/go2/urdf/go2_description_simplified_locomotion.urdf"),
             builder,
             floating=True,
-            density=1000.0,
+            density=2250.0,
             # stiffness=0.0,
-            stiffness=25.0, # This works with action_scale = 10.0 and and mode target position
+            stiffness=25.0,
             damping=0.5,
             contact_ke=5.0e2,
             contact_kd=3.0e3,
@@ -268,7 +268,7 @@ class Go2VelTrack(WarpEnv):
 
 
 if __name__ == "__main__":
-    run_env(Go2VelTrack, 
+    run_env(Go2veltrack, 
             episode_length=200, 
             early_termination=True, 
             render=True, 

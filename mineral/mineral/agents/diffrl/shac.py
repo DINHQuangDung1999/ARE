@@ -102,7 +102,7 @@ class SHAC(Agent):
         self.encoder.to(self.device)
         print('Encoder:', self.encoder)
 
-        self.share_encoder = self.shac_config.get("share_encoder", True)
+        self.share_encoder = self.shac_config.get("share_encoder", False)
         if self.share_encoder:
             self.actor_encoder = self.encoder
             print('Actor Encoder: (shared)')
@@ -499,6 +499,20 @@ class SHAC(Agent):
             loss.backward()
             self.timer.end("train/actor_closure/backward_sim")
 
+            g1 = []
+            for name, params in self.actor.named_parameters():
+                if '_module' in name:
+                    g1.append(params.grad_sample.flatten(1, -1))
+            g1 = torch.concat(g1, dim = 1)
+            grad_var = (g1.std(dim = 0)**2).sum()
+            results["grad_var/actor"].append(grad_var)
+            for name, params in self.actor.named_parameters():
+                if '_module' in name or 'mu' in name:
+                    params.grad_sample = None
+            # print(grad_var.item())
+            # if torch.isnan(grad_var):
+            #     breakpoint()
+
             with torch.no_grad():
                 if self.with_autoent:
                     self._entropy = distr_ents.detach().clone() if self.use_distr_ent else -1.0 * logprobs.detach().clone()
@@ -515,10 +529,12 @@ class SHAC(Agent):
                 grad_norm_after_clip = grad_norm(self.actor.parameters())
 
                 # sanity check
-                if torch.isnan(grad_norm_before_clip) or grad_norm_before_clip > 1e6:
+                # if torch.isnan(grad_norm_before_clip) or grad_norm_before_clip > 1e6:
+                if torch.isnan(grad_norm_before_clip):
                     print('NaN gradient', grad_norm_before_clip)
-                    # raise ValueError
-                    raise KeyboardInterrupt
+                    print('Set grad to zeros')
+                    for params in self.actor.parameters():
+                        params.grad.nan_to_num_(0.0, 0.0, 0.0)
 
             if self.with_logprobs:
                 results["entropy"].append(-1.0 * self.logprobs.mean().detach())
@@ -635,6 +651,7 @@ class SHAC(Agent):
 
             # update episode metrics
             with torch.no_grad():
+                # breakpoint()
                 self.episode_rewards += raw_rew
                 self.episode_lengths += 1
                 self.episode_discounted_rewards += self.episode_gamma * raw_rew
@@ -672,7 +689,7 @@ class SHAC(Agent):
                             or (torch.isinf(v[id]).sum() > 0)
                             or ((torch.abs(v[id]) > 1e6).sum() > 0)
                         ):  # ugly fix for nan values
-                            print(f'nan value: {k}')
+                            print(f'nans at terminal obs: {k}. nan: {torch.isnan(v[id]).sum() > 0}, inf: {(torch.isinf(v[id]).sum() > 0)}, cap: {(torch.abs(v[id]) > 1e6).sum() > 0}.')
                             nan = True
                             break
                     if nan:

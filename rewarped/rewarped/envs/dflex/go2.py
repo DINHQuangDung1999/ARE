@@ -35,17 +35,22 @@ class Go2(WarpEnv):
     state_tensors_names = ("joint_q", "joint_qd")
     control_tensors_names = ("joint_act",)
 
+    joint_pos_action_mode = "relative"
     def __init__(self, num_envs=1, episode_length=1000, early_termination=True, **kwargs):
         num_obs = 49
         num_act = 12
         super().__init__(num_envs, num_obs, num_act, episode_length, early_termination, **kwargs)
         
         # self.action_scale = 80.0
-        
-        self.action_scale = 0.25 # This works with stiffness = 5.0 and mode target position
-        # motor_strength = torch.tensor([0.2, 0.6, 0.4, 0.2, 0.6, 0.4, 0.2, 0.6, 0.4, 0.2, 0.6, 0.4], device=self.device, dtype=torch.float32)
-        # self.action_scale = self.action_scale * motor_strength
-
+        if self.joint_pos_action_mode == "exact":
+            self.action_scale = 0.5 # This works with stiffness = 5.0 and mode target position
+            # motor_strength = torch.tensor([0.2, 0.6, 0.4, 0.2, 0.6, 0.4, 0.2, 0.6, 0.4, 0.2, 0.6, 0.4], device=self.device, dtype=torch.float32)
+            # self.action_scale = self.action_scale * motor_strength
+        elif self.joint_pos_action_mode == "relative":
+            self.action_scale = 0.5
+            # self.action_scale = 1.0
+            # motor_strength = torch.tensor([0.2, 0.2, 0.6, 0.2, 0.2, 0.6, 0.2, 0.2, 0.6, 0.2, 0.2, 0.6], device=self.device, dtype=torch.float32)
+            # self.action_scale = self.action_scale * motor_strength
         self.termination_height = 0.18
         self.action_penalty = -5e-3
         self.joint_vel_obs_scaling = 1.0
@@ -60,9 +65,9 @@ class Go2(WarpEnv):
             os.path.join(self.asset_dir, "dflex/go2/urdf/go2_description_simplified_locomotion.urdf"),
             builder,
             floating=True,
-            density=1000.0,
-            # stiffness=0.0,
-            stiffness=25.0, # This works with action_scale = 10.0 and and mode target position
+            density=2250.0,
+            stiffness=25.0,
+            # stiffness=80.0, 
             damping=0.5,
             contact_ke=5.0e2,
             contact_kd=3.0e3,
@@ -146,7 +151,10 @@ class Go2(WarpEnv):
         actions = actions.view(self.num_envs, -1)
         actions = torch.clip(actions, -1.0, 1.0)
         self.actions = actions
-        joint_targets = self.default_dof_pos + self.action_scale * actions
+        if self.joint_pos_action_mode == "exact":
+            joint_targets = self.action_scale * actions
+        elif self.joint_pos_action_mode == "relative":
+            joint_targets = self.default_dof_pos + self.action_scale * actions
 
         if self.joint_act_indices is ...:
             self.control.assign("joint_act", joint_targets.flatten())

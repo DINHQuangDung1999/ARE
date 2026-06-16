@@ -13,9 +13,9 @@ python -m mineral.scripts.run \
     task.env.env_name=Go2 \
     task.env.numEnvs=4\
     task.env.render=True\
-    logdir=logs_eval/RewarpedGo2-SAPOGAE/seed1 \
+    logdir=workdir/Go2-SAPOGAEAdpt/seed1 \
     agent.network.actor_kwargs.mlp_kwargs.units=\[256,128\] \
     agent.network.critic_kwargs.mlp_kwargs.units=\[256,128\] \
     run=eval seed=1 \
-    ckpt=logs/RewarpedGo2-SAPOGAE/seed1/ckpt/best_rewards1067.57.pth\
+    ckpt=/home/dung-admin/ws/ARE/workdir/Go2-SAPOGAEAdpt/seed1/ckpt/best_rewards3022.15.pth\
     wandb.mode=disabled 
