@@ -1,4 +1,7 @@
 # ARE: Adaptive TD-λ Return Estimation for Learning Control in Differentiable Simulation
+<p align="center">
+  <img src="figures/graphical_abstract.png" width=600/>
+</p>
 
 This is the official repository for the implementation of the paper **ARE: Adaptive TD-λ Return Estimation for Learning Control in Differentiable Simulation**.
 
@@ -6,92 +9,46 @@ In this paper, we propose to control the variance of pathwise gradient in first-
 
 Our algorithms demonstrate improvements over challenging locomotion tasks, with an average improvement of roughly 50% over the Ant environment and almost 100% with the simulated Unitree Go2 quadruped environment. Moreover, our design allows exploiting the gradient information over a much longer learning horizon, enabling more effective long-term credit assignment for first- order model-based reinforcement learning methods.
 
-![Description of figure](figures/graphical_abstract.png)
+<table align="center">
+  <tbody>
+  <tr>
+    <td>
+     <img src="figures/grad_var_maxmin.png" width=400/>
+    </td>
+    <td>
+      <img src="figures/loss_landscape.png" width=400/>
+    </td>
+  <tr>
+    <td align="center"> Guaranteed variance reduction
+    <td align="center"> Smoother optimization landscape
+  </tr>
+</tbody>
+</table>
 
-- `mineral` from `etaoxing/mineral`
-- `rewarped` from `rewarped/rewarped`
+### Acknowledgement
+We built our implementation based on
+- [mineral 0.0.0](https://github.com/etaoxing/mineral)
+- [rewarped 1.3.3](https://github.com/rewarped/rewarped/tree/v1.3.3)
 
-The goal is to keep both codebases in one repository so you can:
+Huge shout out to the author [etaoxing](https://github.com/etaoxing)
 
-- edit both projects together
-- keep your run and deployment scripts at the top level
-- install both packages from local source
-- version your combined modifications in one Git history
-
-## Layout
-
-```text
-ARE/
-  README.md
-  .gitignore
-  docs/
-    protocols.md
-  scripts/
-    setup_env.sh
-    verify_install.sh
-  mineral/
-  rewarped/
-```
-
-## Development model
-
-This repository treats `mineral/` and `rewarped/` as vendored source trees inside one outer repo. The inner `.git` directories are intentionally absent, so the outer `ARE` repository tracks all source changes directly.
-
-For development, install both packages in editable mode:
+### Setup
 
 ```bash
-./scripts/setup_env.sh
-```
+conda create -n ARE python=3.10
+conda activate ARE
 
-That creates `.venv/` and runs:
-
-```bash
+git clone https://github.com/DINHQuangDung1999/ARE.git
+cd ARE
 pip install -e ./rewarped
 pip install -e ./mineral
 ```
 
-`rewarped` is installed first because `mineral` can run Rewarped-based tasks.
-
-## Quick start
+### Train and play policy 
 
 ```bash
-cd /home/dung-admin/ws/empty/ARE
-./scripts/setup_env.sh
-./scripts/verify_install.sh
+bash train.sh
+bash eval.sh
 ```
 
-## Importing upstream source
 
-If you want to rebuild the vendored trees from GitHub, use:
-
-```bash
-./scripts/import_upstreams.sh
-```
-
-That script clones or refreshes:
-
-- `https://github.com/etaoxing/mineral.git`
-- `https://github.com/rewarped/rewarped.git`
-
-It then copies their working trees into `ARE/mineral` and `ARE/rewarped` and removes nested `.git` directories so the outer `ARE` repo remains the only Git repository.
-
-Activate the environment when working interactively:
-
-```bash
-source .venv/bin/activate
-```
-
-## Running
-
-Put your own top-level run scripts in the repository root or in `scripts/`. Example:
-
-```bash
-source .venv/bin/activate
-python -m mineral.scripts.run --help
-```
-
-If you maintain experiment launchers, keep them at the outer level so they can reference both source trees without changing directories.
-
-## Reproducibility
-
-The operating procedure for updating vendored sources, recording provenance, and maintaining deploy scripts lives in [docs/protocols.md](/home/dung-admin/ws/empty/ARE/docs/protocols.md).
