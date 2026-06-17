@@ -514,16 +514,30 @@ class SHACGAE(Agent):
         self.timer.start("train/actor_closure/backward_sim")
         actor_loss.backward()
         self.timer.end("train/actor_closure/backward_sim")
-        g1 = []
+        grad_var = torch.zeros((), dtype=torch.float32, device=self.device)
         for name, params in self.actor.named_parameters():
-            breakpoint()
             if '_module' in name:
-                g1.append(params.grad_sample.flatten(1, -1))
-        g1 = torch.concat(g1, dim = 1)
-        grad_var = (g1.std(dim = 0)**2).sum()
+                grad_sample = getattr(params, "grad_sample", None)
+                if grad_sample is None:
+                    continue
+                grad_sample = grad_sample.flatten(1, -1)
+                if grad_sample.shape[0] > 1:
+                    grad_var = grad_var + grad_sample.var(dim=0, unbiased=True).sum()
+                else:
+                    grad_var = grad_var + grad_sample.var(dim=0, unbiased=False).sum()
+
+        # Previous implementation kept for reference:
+        # g1 = []
+        # for name, params in self.actor.named_parameters():
+        #     if '_module' in name:
+        #         breakpoint()
+        #         g1.append(params.grad_sample.flatten(1, -1))
+        # g1 = torch.concat(g1, dim=1)
+        # grad_var = (g1.std(dim=0) ** 2).sum()
+
         results["grad_var/actor"].append(grad_var)
         for name, params in self.actor.named_parameters():
-            if '_module' in name or 'mu' in name:
+            if getattr(params, "grad_sample", None) is not None:
                 params.grad_sample = None
         # print(grad_var.item())
         # if torch.isnan(grad_var):

@@ -12,9 +12,9 @@ do
     task=Rewarped \
     agent=DFlexSAPOGAE \
     task.env.env_suite=dflex\
-    task.env.env_name=Go2 \
+    task.env.env_name=Go2veltrack \
     task.env.numEnvs=64\
-    logdir=workdir/Go2-SAPOGAEAdpt/seed${seed} \
+    logdir=../logs/Go2veltrack-SAPOGAEAdpt/seed${seed} \
     agent.shac.max_epochs=2500 \
     agent.shac.max_agent_steps=1e7 \
     agent.shac.horizon_len=32\
@@ -23,7 +23,7 @@ do
     agent.network.actor_kwargs.mlp_kwargs.units=\[256,128\] \
     agent.network.critic_kwargs.mlp_kwargs.units=\[256,128\] \
     run=train_eval seed=${seed} \
-    wandb.name=Go2-SAPOGAEAdpt-${seed} \
+    wandb.name=Go2veltrack-SAPOGAEAdpt-${seed} \
     wandb.mode=online \
     wandb.project=Test
 done

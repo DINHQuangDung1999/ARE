@@ -14,7 +14,7 @@ export PYTHONPATH="${ROOT_DIR}/rewarped:${PYTHONPATH:-}"
 #     task.env.env_suite=dflex\
 #     task.env.env_name=Go2 \
 #     task.env.numEnvs=64\
-#     logdir=workdir/Go2-SAPOGAEAdpt/seed${seed} \
+#     logdir=../logs/Go2-SAPOGAEAdpt/seed${seed} \
 #     agent.shac.max_epochs=2500 \
 #     agent.shac.max_agent_steps=1e7 \
 #     agent.shac.horizon_len=32\
@@ -36,7 +36,7 @@ do
     task.env.env_suite=dflex\
     task.env.env_name=Go2 \
     task.env.numEnvs=64\
-    logdir=workdir/Go2-SAPO/seed${seed} \
+    logdir=../logs/Go2-SAPO/seed${seed} \
     agent.shac.max_epochs=2500 \
     agent.shac.max_agent_steps=1e7 \
     agent.shac.horizon_len=32\

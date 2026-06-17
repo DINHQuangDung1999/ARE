@@ -10,12 +10,12 @@ python -m mineral.scripts.run \
     task=Rewarped \
     agent=DFlexSAPOGAE \
     task.env.env_suite=dflex\
-    task.env.env_name=Go2 \
+    task.env.env_name=Go2veltrack \
     task.env.numEnvs=1\
     task.env.render=True\
-    logdir=workdir/Go2-SAPOGAEAdpt/seed1 \
+    logdir=../logs/evals \
     agent.network.actor_kwargs.mlp_kwargs.units=\[256,128\] \
     agent.network.critic_kwargs.mlp_kwargs.units=\[256,128\] \
     run=eval seed=1 \
-    ckpt=/home/dung-admin/ws/ARE/workdir/Go2-SAPOGAEAdpt/seed1/ckpt/best_rewards3025.32.pth\
+    ckpt=/home/dung-admin/ws/ARE/logs/Go2veltrack-SAPOGAEAdpt/seed1/ckpt/best_rewards258.50.pth\
     wandb.mode=disabled 

@@ -43,7 +43,7 @@ class Go2veltrack(WarpEnv):
         num_act = 12
         super().__init__(num_envs, num_obs, num_act, episode_length, early_termination, **kwargs)
 
-        self.action_scale = 0.25
+        self.action_scale = 0.5
         self.joint_vel_obs_scaling = 1.0
         self.command_resample_interval = max(int(round(10.0 / self.frame_dt)), 1)
         self.command_threshold = 0.1
@@ -252,8 +252,9 @@ class Go2veltrack(WarpEnv):
         else:
             terminated = torch.zeros_like(reset, dtype=torch.bool)
 
-        self.prev_actions.copy_(self.actions)
-        self.prev_joint_vel.copy_(joint_vel)
+        # Keep history buffers out of the live autograd graph across rollout steps.
+        self.prev_actions.copy_(self.actions.detach())
+        self.prev_joint_vel.copy_(joint_vel.detach())
         self.rew_buf, self.reset_buf, self.terminated_buf, self.truncated_buf = rew, reset, terminated, truncated
         self.extras["reward_terms"] = {
             "track_lin_vel_xy_exp": track_lin_vel_xy_exp.mean(),
