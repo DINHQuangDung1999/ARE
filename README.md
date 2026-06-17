@@ -9,8 +9,6 @@ This is the official repository for the implementation of the paper **ARE: Adapt
 
 In this paper, we propose to control the variance of pathwise gradient in first-order model-based RL algorithms via using the TD-λ return as the maximization objective for the actor network. In addition, we propose to adaptively adjust λ using a value-fitting objective to avoid expensive manual tuning and further enhance the learning stability. 
 
-Our algorithms demonstrate improvements over challenging locomotion tasks, with an average improvement of roughly 50% over the Ant environment and almost 100% with the simulated Unitree Go2 quadruped environment. Moreover, our design allows exploiting the gradient information over a much longer learning horizon, enabling more effective long-term credit assignment for first- order model-based reinforcement learning methods.
-
 <table align="center">
   <tbody>
   <tr>
@@ -23,6 +21,24 @@ Our algorithms demonstrate improvements over challenging locomotion tasks, with 
   <tr>
     <td align="center"> Guaranteed variance reduction
     <td align="center"> Smoother optimization landscape
+  </tr>
+</tbody>
+</table>
+
+Our algorithms demonstrate improvements over challenging locomotion tasks, with an average improvement of roughly 50% over the Ant environment and almost 100% with the simulated Unitree Go2 quadruped environment. Moreover, our design allows exploiting the gradient information over a much longer learning horizon, enabling more effective long-term credit assignment for first- order model-based reinforcement learning methods.
+
+<table align="center">
+  <tbody>
+  <tr>
+    <td>
+     <img src="figures/Go2SAPO.gif" width=400/>
+    </td>
+    <td>
+      <img src="figures/Go2SAPOARE.gif" width=400/>
+    </td>
+  <tr>
+    <td align="center"> SAPO policy shows less consistent gait (tipping to the sides, bounces) and worse task achievement (moving forward)
+    <td align="center"> SAPOTDAdpt policy demonstrates a more natural gait and achieve faster forward speed
   </tr>
 </tbody>
 </table>
