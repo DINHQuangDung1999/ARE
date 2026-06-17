@@ -1,4 +1,6 @@
 # ARE: Adaptive TD-λ Return Estimation for Learning Control in Differentiable Simulation
+🎉🎉🎉 **ACCEPTED AT IJCNN 2026** 🎉🎉🎉
+
 <p align="center">
   <img src="figures/graphical_abstract.png" width=600/>
 </p>
