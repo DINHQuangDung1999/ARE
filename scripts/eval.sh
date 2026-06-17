@@ -11,11 +11,11 @@ python -m mineral.scripts.run \
     agent=DFlexSAPOGAE \
     task.env.env_suite=dflex\
     task.env.env_name=Go2 \
-    task.env.numEnvs=4\
+    task.env.numEnvs=1\
     task.env.render=True\
     logdir=workdir/Go2-SAPOGAEAdpt/seed1 \
     agent.network.actor_kwargs.mlp_kwargs.units=\[256,128\] \
     agent.network.critic_kwargs.mlp_kwargs.units=\[256,128\] \
     run=eval seed=1 \
-    ckpt=/home/dung-admin/ws/ARE/workdir/Go2-SAPOGAEAdpt/seed1/ckpt/best_rewards3022.15.pth\
+    ckpt=/home/dung-admin/ws/ARE/workdir/Go2-SAPOGAEAdpt/seed1/ckpt/best_rewards3025.32.pth\
     wandb.mode=disabled 
