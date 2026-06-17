@@ -2,7 +2,7 @@
 🎉🎉🎉 **ACCEPTED AT IJCNN 2026** 🎉🎉🎉
 
 <p align="center">
-  <img src="figures/graphical_abstract.png" width=600/>
+  <img src="media/graphical_abstract.png" width=600/>
 </p>
 
 This is the official repository for the implementation of the paper **ARE: Adaptive TD-λ Return Estimation for Learning Control in Differentiable Simulation**.
@@ -13,10 +13,10 @@ In this paper, we propose to control the variance of pathwise gradient in first-
   <tbody>
   <tr>
     <td>
-     <img src="figures/grad_var_maxmin.png" width=400/>
+     <img src="media/grad_var_maxmin.png" width=400/>
     </td>
     <td>
-      <img src="figures/loss_landscape.png" width=400/>
+      <img src="media/loss_landscape.png" width=400/>
     </td>
   <tr>
     <td align="center"> Guaranteed variance reduction
@@ -31,10 +31,10 @@ Our algorithms demonstrate improvements over challenging locomotion tasks, with 
   <tbody>
   <tr>
     <td>
-     <img src="figures/Go2SAPO.gif" width=400/>
+     <img src="media/Go2SAPO.gif" width=400/>
     </td>
     <td>
-      <img src="figures/Go2SAPOARE.gif" width=400/>
+      <img src="media/Go2SAPOARE.gif" width=400/>
     </td>
   <tr>
     <td align="center"> SAPO policy shows less consistent gait (tipping to the sides, bounces) and worse task achievement (moving forward)
