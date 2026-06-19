@@ -22,7 +22,7 @@ class Humanoid(WarpEnv):
     env_offset = (0.0, 0.0, 2.5)
 
     integrator_type = IntegratorType.FEATHERSTONE
-    sim_substeps_featherstone = 48
+    sim_substeps_featherstone = 16
     featherstone_settings = dict(angular_damping=0.0, update_mass_matrix_every=sim_substeps_featherstone)
 
     eval_fk = True
@@ -30,26 +30,55 @@ class Humanoid(WarpEnv):
 
     frame_dt = 1.0 / 60.0
     up_axis = "Y"
-    ground_plane = True
+    ground_plane = False
 
     state_tensors_names = ("joint_q", "joint_qd")
     control_tensors_names = ("joint_act",)
+
+    joint_pos_action_mode = "relative"
 
     def __init__(self, num_envs=64, episode_length=1000, early_termination=True, **kwargs):
         num_obs = 76
         num_act = 21
         super().__init__(num_envs, num_obs, num_act, episode_length, early_termination, **kwargs)
 
-        motor_scale = 0.35
-        s = [200, 200, 200, 200, 200, 600, 400, 100, 100, 200, 200, 600, 400, 100, 100, 100, 100, 200, 100, 100, 200]
-        motor_strengths = torch.tensor(s, dtype=torch.float, device=self.device).view(1, -1)
-        self.action_scale = motor_scale * motor_strengths
+        self.motor_strengths = [
+            200,
+            200,
+            200,
+            200,
+            200,
+            600,
+            400,
+            100,
+            100,
+            200,
+            200,
+            600,
+            400,
+            100,
+            100,
+            100,
+            100,
+            200,
+            100,
+            100,
+            200,
+        ]
 
-        self.termination_height = 0.74
+        self.motor_scale = 0.01
+        self.action_scale = self.motor_scale * torch.tensor(self.motor_strengths, dtype=torch.float, device=self.device)
+        # if self.joint_pos_action_mode == "exact":
+        #     self.action_scale = 0.5 # This works with stiffness = 5.0 and mode target position
+        #     # motor_strength = torch.tensor([0.2, 0.6, 0.4, 0.2, 0.6, 0.4, 0.2, 0.6, 0.4, 0.2, 0.6, 0.4], device=self.device, dtype=torch.float32)
+        #     # self.action_scale = self.action_scale * motor_strength
+        # elif self.joint_pos_action_mode == "relative":
+        #     self.action_scale = 0.5
+        self.termination_height = 0.3
         self.action_penalty = -0.002
         self.joint_vel_obs_scaling = 0.1
         self.termination_tolerance = 0.1
-        self.height_rew_scale = 10.0
+        self.height_rew_scale = 1.0
 
     def create_modelbuilder(self):
         builder = super().create_modelbuilder()
@@ -64,23 +93,24 @@ class Humanoid(WarpEnv):
             os.path.join(self.asset_dir, "dflex/humanoid.xml"),
             builder,
             density=1000.0,
-            stiffness=5.0,
-            damping=0.1,
-            contact_ke=2.0e4,
-            contact_kd=5.0e3,
-            contact_kf=1.0e3,
-            contact_mu=0.75,
+            stiffness=0.0,
+            damping=1.0,
+            contact_ke=4.0e3,
+            contact_kd=1.0e3,
+            contact_kf=3.0e2,
+            contact_mu=1.0,
             contact_restitution=0.0,
             limit_ke=1.0e3,
             limit_kd=1.0e1,
-            armature=0.007,
-            # enable_self_collisions=True,
-            up_axis="y",
+            armature=0.05,
+            # ignore_names=("floor",),
+            enable_self_collisions=True,
+            up_axis="z",
         )
 
         builder.joint_axis_mode = [wp.sim.JOINT_MODE_FORCE] * len(builder.joint_axis_mode)
-        builder.joint_q[:7] = [0.0, 1.7, 0.0, *wp.quat_from_axis_angle(wp.vec3(1.0, 0.0, 0.0), -math.pi * 0.5)]
-        builder.joint_q[1] = 1.35  # start_height
+        # builder.joint_axis_mode = [wp.sim.JOINT_TARGET_POSITION] * len(builder.joint_axis_mode)
+        builder.joint_q[:7] = [0.0, 0.0, 1.5, *wp.quat_from_axis_angle(wp.vec3(1.0, 0.0, 0.0), 0.0)]
 
     def init_sim(self):
         super().init_sim()
@@ -92,6 +122,7 @@ class Humanoid(WarpEnv):
 
             self.start_joint_q = self.state.joint_q.view(self.num_envs, -1).clone()
             self.start_joint_qd = self.state.joint_qd.view(self.num_envs, -1).clone()
+            self.default_dof_pos = self.start_joint_q[:, 7:].clone()
 
             self.x_unit_tensor = torch.tensor([1, 0, 0], dtype=torch.float, device=self.device)
             self.y_unit_tensor = torch.tensor([0, 1, 0], dtype=torch.float, device=self.device)
@@ -140,14 +171,17 @@ class Humanoid(WarpEnv):
         actions = actions.view(self.num_envs, -1)
         actions = torch.clip(actions, -1.0, 1.0)
         self.actions = actions
-        acts = self.action_scale * actions
-
-        acts = -acts  # invert the action direction to match dflex
+        joint_targets = self.action_scale * actions
+        # if self.joint_pos_action_mode == "exact":
+        #     joint_targets = self.action_scale * actions
+        # elif self.joint_pos_action_mode == "relative":
+        #     joint_targets = self.default_dof_pos + self.action_scale * actions
+        # joint_targets = -joint_targets  # invert the action direction to match dflex
 
         if self.joint_act_indices is ...:
-            self.control.assign("joint_act", acts.flatten())
+            self.control.assign("joint_act", joint_targets.flatten())
         else:
-            joint_act = self.scatter_actions(self.joint_act, self.joint_act_indices, acts)
+            joint_act = self.scatter_actions(self.joint_act, self.joint_act_indices, joint_targets)
             self.control.assign("joint_act", joint_act.flatten())
 
     def compute_observations(self):
@@ -173,35 +207,35 @@ class Humanoid(WarpEnv):
         heading_vec = quat_rotate(torso_quat, self.basis_vec0)
 
         obs_buf = [
-            torso_pos[:, 1:2],  # 0
+            torso_pos[:, 2:3],  # 0
             torso_rot,  # 1:5
             lin_vel,  # 5:8
             ang_vel,  # 8:11
             joint_q.view(self.num_envs, -1)[:, 7:],  # 11:32
             self.joint_vel_obs_scaling * joint_qd.view(self.num_envs, -1)[:, 6:],  # 32:53
-            up_vec[:, 1:2],  # 53:54
+            up_vec[:, 2:3],  # 53:54
             (heading_vec * target_dirs).sum(dim=-1).unsqueeze(-1),  # 54:55
             self.actions.clone(),  # 55:76
         ]
         self.obs_buf = torch.cat(obs_buf, dim=-1)
 
     def compute_reward(self):
-        up_reward = 0.1 * self.obs_buf[:, 53]
+        up_reward = self.obs_buf[:, 53]
         heading_reward = self.obs_buf[:, 54]
-
+        # print(self.obs_buf[:, 0])
         height_diff = self.obs_buf[:, 0] - (self.termination_height + self.termination_tolerance)
         height_reward = torch.clip(height_diff, -1.0, self.termination_tolerance)
-        height_reward = torch.where(height_reward < 0.0, -200.0 * height_reward * height_reward, height_reward)
+        height_reward = torch.where(height_diff < 0.0, -200.0 * height_reward * height_reward, height_reward)
         height_reward = torch.where(height_reward > 0.0, self.height_rew_scale * height_reward, height_reward)
 
         progress_reward = self.obs_buf[:, 5]
 
         rew = (
             progress_reward
-            + up_reward
+            + 0.1 * up_reward
             + heading_reward
             + height_reward
-            + torch.sum(self.actions**2, dim=-1) * self.action_penalty
+            + self.action_penalty * torch.sum(self.actions**2, dim=-1) 
         )
 
         # TODO: add nan value checking like in dflex
@@ -219,4 +253,7 @@ class Humanoid(WarpEnv):
 
 
 if __name__ == "__main__":
-    run_env(Humanoid)
+    run_env(Humanoid, 
+            num_envs = 1,
+            episode_length = 300,
+            no_grad=True)

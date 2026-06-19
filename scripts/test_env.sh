@@ -10,5 +10,5 @@ export PYTHONPATH="${ROOT_DIR}/rewarped:${PYTHONPATH:-}"
 # python -c "import rewarped.envs.dflex.go2 as m; print(m.__file__)"
 # python -c "from rewarped.warp import model_monkeypatch as m; print(m.__file__)"
 
-python -m rewarped.envs.dflex.go2
+python -m rewarped.envs.dflex.humanoid
 

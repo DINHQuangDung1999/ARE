@@ -452,7 +452,27 @@ class WarpEnv(Environment):
 
         self.sim_time += self.frame_dt
 
+    def register_nan_grad_hooks(self, actions):
+        if not self.requires_grad:
+            return
+
+        def create_hook():
+            def hook(grad):
+                torch.nan_to_num(grad, 0.0, 0.0, 0.0, out=grad)
+
+            return hook
+
+        state = self.state
+        if state.joint_q.requires_grad:
+            state.joint_q.register_hook(create_hook())
+        if state.joint_qd.requires_grad:
+            state.joint_qd.register_hook(create_hook())
+        if actions.requires_grad:
+            actions.register_hook(create_hook())
+
     def step(self, actions):
+        self.register_nan_grad_hooks(actions)
+
         with wp.ScopedTimer("simulate", active=False, detailed=False):
             self.pre_physics_step(actions)
             self.do_physics_step()

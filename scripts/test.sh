@@ -34,16 +34,16 @@ do
     task=Rewarped \
     agent=DFlexSAPO \
     task.env.env_suite=dflex\
-    task.env.env_name=Go2 \
+    task.env.env_name=Humanoid \
     task.env.numEnvs=64\
-    logdir=../logs/Go2-SAPO/seed${seed} \
+    logdir=../logs/Humanoid-SAPO/seed${seed} \
     agent.shac.max_epochs=2500 \
     agent.shac.max_agent_steps=1e7 \
     agent.shac.horizon_len=32\
     agent.network.actor_kwargs.mlp_kwargs.units=\[256,128\] \
     agent.network.critic_kwargs.mlp_kwargs.units=\[256,128\] \
     run=train_eval seed=${seed} \
-    wandb.name=Go2-SAPO-${seed} \
+    wandb.name=Humanoid-SAPO-${seed} \
     wandb.mode=online \
     wandb.project=Test
 done
